@@ -23,6 +23,7 @@ std::string deribit_api::process(const std::string &input) {
         {"sell", deribit_api::sell},
         {"buy", deribit_api::buy},
         {"get_open_orders", deribit_api::get_open_orders},
+        {"get_history", deribit_api::get_history},
         {"modify", deribit_api::modify},
         {"cancel", deribit_api::cancel}
     };
@@ -257,6 +258,39 @@ std::string deribit_api::get_open_orders(const std::string &input) {
     return j.dump();
 }
 
+std::string deribit_api::get_history(const std::string &input) {
+    std::istringstream is(input);
+    
+    int id;
+    std::string cmd;
+    std::string opt1;
+    is >> id >> cmd >> opt1;
+
+    jsonrpc j;
+
+    if (opt1 == "") {
+        utils::printerr("Usage: DERIBIT <id> get_history <currency|instrument>\n");
+        return "";
+    }
+    // if opt1 is NOT a supported currency => treat as instrument
+    if(std::find(SUPPORTED_CURRENCIES.begin(),
+                 SUPPORTED_CURRENCIES.end(),
+                opt1) == SUPPORTED_CURRENCIES.end()) {
+        j["method"] = "private/get_order_history_by_instrument";
+        j["params"] = {
+            {"instrument_name", opt1},
+            {"count", 20}
+        };
+    }
+    else {
+        j["method"] = "private/get_order_history_by_currency";
+        j["params"] = {
+            {"currency", opt1},
+            {"count", 20}
+        };
+    }
+    return j.dump();
+}
 std::string deribit_api::modify(const std::string &input) {
     std::istringstream is;
 
