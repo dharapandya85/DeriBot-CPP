@@ -264,28 +264,32 @@ std::string deribit_api::get_history(const std::string &input) {
     int id;
     std::string cmd;
     std::string opt1;
-    is >> id >> cmd >> opt1;
+    is >> id >> cmd >> instrument_or_currency;
 
-    jsonrpc j;
-
-    if (opt1 == "") {
+    
+    if (instrument_or_currency == "") {
         utils::printerr("Usage: DERIBIT <id> get_history <currency|instrument>\n");
         return "";
     }
-    // if opt1 is NOT a supported currency => treat as instrument
-    if(std::find(SUPPORTED_CURRENCIES.begin(),
+
+    jsonrpc j;
+
+    // check instrument_or_currency is present in supported currency 
+    const bool is_currency = std::find(SUPPORTED_CURRENCIES.begin(),
                  SUPPORTED_CURRENCIES.end(),
-                opt1) == SUPPORTED_CURRENCIES.end()) {
-        j["method"] = "private/get_order_history_by_instrument";
+                instrument_or_currency) != SUPPORTED_CURRENCIES.end();
+
+    if (is_currency) {
+        j["method"] = "private/get_order_history_by_currency";
         j["params"] = {
-            {"instrument_name", opt1},
+            {"currency", instrument_or_currency},
             {"count", 20}
         };
     }
     else {
-        j["method"] = "private/get_order_history_by_currency";
+        j["method"] = "private/get_order_history_by_instrument";
         j["params"] = {
-            {"currency", opt1},
+            {"instrument_name", instrument_or_currency},
             {"count", 20}
         };
     }
